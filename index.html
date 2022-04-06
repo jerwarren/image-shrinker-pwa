@@ -1,13 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
-browser-image-compression@<span id="version">#.#.#</span>
-<p>look at console to see logs</p>
-Options:<br />
-<label for="maxSizeMB">maxSizeMB: <input type="number" id="maxSizeMB" name="maxSizeMB" value="1" /></label><br />
-<label for="maxWidthOrHeight">maxWidthOrHeight: <input type="number" id="maxWidthOrHeight" name="maxWidthOrHeight"
-                                                       value="1024" /></label>
-<hr>
+
 <div>
     <label for="web-worker">
         Compress in web-worker <span id="web-worker-progress"></span>
@@ -15,25 +9,12 @@ Options:<br />
     </label>
     <p id="web-worker-log"></p>
 </div>
-<hr>
-<div>
-    <label for="main-thread">
-        Compress in main thread <span id="main-thread-progress"></span>
-        <input id="main-thread" type="file" accept="image/*" onchange="compressImage(event, false);">
-    </label>
-    <p id="main-thread-log"></p>
-</div>
-<table>
-    <tr>
-        <td>input preview</td>
-        <td>output preview</td>
-    </tr>
-    <tr>
-        <td><img id="preview" /></td>
-        <td><img id="preview-after-compress" /></td>
-    </tr>
-</table>
 
+
+<img id="preview" />
+
+<img id="preview-after-compress" />
+<button id="share" onclick="share()" data-url>share</button>
 <style>
     table, th, td {
         border: 1px solid black;
@@ -48,43 +29,52 @@ Options:<br />
     img {
         max-width: 100%;
     }
+
+    #preview {
+      display: none;
+    }
 </style>
 
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@1.0.17/dist/browser-image-compression.js"></script>
 <script>
   document.querySelector('#version').innerHTML = imageCompression.version
+  
   function compressImage (event, useWebWorker) {
     var file = event.target.files[0]
-    var logDom, progressDom
-    if (useWebWorker) {
-      logDom = document.querySelector('#web-worker-log')
-      progressDom = document.querySelector('#web-worker-progress')
-    } else {
-      logDom = document.querySelector('#main-thread-log')
-      progressDom = document.querySelector('#main-thread-progress')
-    }
+    var logDom, progressDom, downloadLink, filesArray;
+    
+    logDom = document.querySelector('#web-worker-log')
+    progressDom = document.querySelector('#web-worker-progress')
+    
     document.getElementById('preview').src = URL.createObjectURL(file)
+
 
     logDom.innerHTML = 'Source image size:' + (file.size / 1024 / 1024).toFixed(2) + 'mb'
     console.log('input', file)
+
     imageCompression.getExifOrientation(file).then(function (o) {
       console.log('ExifOrientation', o)
     })
 
     var options = {
-      maxSizeMB: parseFloat(document.querySelector('#maxSizeMB').value),
-      maxWidthOrHeight: parseFloat(document.querySelector('#maxWidthOrHeight').value),
-      useWebWorker: useWebWorker,
-      onProgress: onProgress
+      maxSizeMB: parseFloat(0.400),
+      maxWidthOrHeight: parseFloat(1024),
+      useWebWorker: true,
+      onProgress: onProgress,
+      fileType: "image/jpeg"
     }
     imageCompression(file, options)
       .then(function (output) {
           logDom.innerHTML += ', output size:' + (output.size / 1024 / 1024).toFixed(2) + 'mb'
           console.log('output', output)
-          const downloadLink = URL.createObjectURL(output)
-          logDom.innerHTML += '&nbsp;<a href="' + downloadLink + '" download="' + file.name + '">download compressed image</a>'
-          document.getElementById('preview-after-compress').src = downloadLink
+
+          downloadLink = URL.createObjectURL(output)
+          logDom.innerHTML += '&nbsp;<a id="result" href="' + downloadLink + '" download="' + file.name + '">download compressed image</a>'
+          document.getElementById('preview-after-compress').src = downloadLink;
+
+          var shareFile = new File([output], "picture.jpg", {type: 'image/jpeg'});
+          window.filesArray = [shareFile];
           return uploadToServer(output)
       })
       .catch(function (error) {
@@ -96,7 +86,15 @@ Options:<br />
       progressDom.innerHTML = '(' + p + '%' + ')'
     }
   }
-
+  function share(){
+    console.log(filesArray)
+    navigator.share({
+      files: window.filesArray,
+      title: 'Shrunk image',
+      text: 'Image shrunk to fit within MMS limits',
+    })
+  }
+  
   function uploadToServer (file) {
     // const formData = new FormData()
     // formData.append('image', file, file.name)
