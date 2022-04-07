@@ -1,48 +1,88 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
 <body>
 
-<div>
-    <label for="web-worker">
-        Compress in web-worker <span id="web-worker-progress"></span>
-        <input id="web-worker" type="file" accept="image/*" onchange="compressImage(event, true);">
-    </label>
-    <p id="web-worker-log"></p>
+<div id="chooser">
+  <input id="web-worker" type="file" accept="image/*" onchange="compressImage(event, true);">
 </div>
 
+<div id="spinner" class="hide">
+  <img src="img/loader.svg">
+</div>
 
 <img id="preview" />
+<div id="resulting" class="hide">
+  <p id="web-worker-log"></p>
+  <img id="preview-after-compress" /><br>
+  <button id="share" onclick="share()" data-url>share</button>
+</div>
 
-<img id="preview-after-compress" />
-<button id="share" onclick="share()" data-url>share</button>
 <style>
-    table, th, td {
-        border: 1px solid black;
-        border-collapse: collapse;
+    a {
+      color: white;
+      font-weight: 700;
     }
-
-    td {
-        vertical-align: top;
-        width: 50%;
-    }
-
     img {
-        max-width: 100px;
+        margin: 10vw;
+        width: 75%;
     }
 
     #preview {
       display: none;
     }
+    #chooser, #resulting, #spinner {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background-color: black;
+      text-align: center;
+      color: white;
+    }
+    #spinner img {
+      width: 100px;
+      margin-top: calc(50vh - 50px);
+      margin-left: calc(50vw - 50px);
+      margin-right: calc(50vw - 50px);
+    }
+    #spinner.hide {
+      display: none;
+    }
+    #chooser.hide {
+      display: none;
+    }
+    #resulting.hide {
+      display: none;
+    }
+
+    #web-worker {
+      top: 50%;
+      transform: translateY(-50%);
+      position: relative;
+      width: 50%;
+      margin-left: 25%;
+    }
+
 </style>
 
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@1.0.17/dist/browser-image-compression.js"></script>
 <script>
-  document.querySelector('#version').innerHTML = imageCompression.version
   
   function compressImage (event, useWebWorker) {
+    var spinner = document.getElementById("spinner");
+    
+    spinner.classList.toggle("hide");
     var file = event.target.files[0]
     var logDom, progressDom, downloadLink, filesArray;
+
+    var chooser = document.getElementById("chooser");
+    var resulting = document.getElementById("resulting");
     
     logDom = document.querySelector('#web-worker-log')
     progressDom = document.querySelector('#web-worker-progress')
@@ -51,7 +91,6 @@
 
 
     logDom.innerHTML = 'Source image size:' + (file.size / 1024 / 1024).toFixed(2) + 'mb'
-    console.log('input', file)
 
     imageCompression.getExifOrientation(file).then(function (o) {
       console.log('ExifOrientation', o)
@@ -66,11 +105,14 @@
     }
     imageCompression(file, options)
       .then(function (output) {
-          logDom.innerHTML += ', output size:' + (output.size / 1024 / 1024).toFixed(2) + 'mb'
+          chooser.classList.toggle("hide");
+          resulting.classList.toggle("hide");
+
+          logDom.innerHTML += '<br> output size:' + (output.size / 1024 / 1024).toFixed(2) + 'mb<br>'
           console.log('output', output)
 
           downloadLink = URL.createObjectURL(output)
-          logDom.innerHTML += '&nbsp;<a id="result" href="' + downloadLink + '" download="' + file.name + '">download compressed image</a>'
+          logDom.innerHTML += '&nbsp;<a id="result" href="' + downloadLink + '" download="' + file.name + '"><br><br>download compressed image</a>'
           document.getElementById('preview-after-compress').src = downloadLink;
 
           var shareFile = new File([output], "picture.jpg", {type: 'image/jpeg'});
@@ -83,7 +125,9 @@
 
 
     function onProgress (p) {
-      progressDom.innerHTML = '(' + p + '%' + ')'
+      if (p == 100){
+        spinner.classList.toggle("hide");
+      }
     }
   }
   function share(){
