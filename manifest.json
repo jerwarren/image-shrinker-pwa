@@ -1,6 +1,6 @@
 {
     "name": "Shrink for MMS",
-    "short_name": "Shinker",
+    "short_name": "MMS Shrinker",
     "icons": [
       {
         "src": "/image-shrinker-pwa/img/icon.svg",
