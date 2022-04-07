@@ -1,0 +1,26 @@
+{
+    "name": "Shrink for MMS",
+    "short_name": "Shinker",
+    "icons": [
+      {
+        "src": "/image-shrinker-pwa/img/icon.svg",
+        "type": "image/svg+xml",
+        "sizes": "512x512"
+      },
+      {
+        "src": "/images/icon.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      }
+    ],
+    "start_url": "/image-shrinker-pwa/?source=pwa",
+    "background_color": "#000000",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#93dbe9",
+    "shortcuts": [
+    ],
+    "description": "Shrink images to fit within MMS limits",
+    "screenshots": [
+    ]
+  }
