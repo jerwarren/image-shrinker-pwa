@@ -75,28 +75,27 @@
 
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@1.0.17/dist/browser-image-compression.js"></script>
 <script>
+  var spinner = document.getElementById("spinner");
+  var chooser = document.getElementById("chooser");
+  var resulting = document.getElementById("resulting");
+
+  var logDom = document.querySelector('#web-worker-log')
+  var progressDom = document.querySelector('#web-worker-progress')
   
   function compressImage (event, useWebWorker) {
-    var spinner = document.getElementById("spinner");
     
     spinner.classList.toggle("hide");
     var file = event.target.files[0]
-    var logDom, progressDom, downloadLink, filesArray;
 
-    var chooser = document.getElementById("chooser");
-    var resulting = document.getElementById("resulting");
-    
-    logDom = document.querySelector('#web-worker-log')
-    progressDom = document.querySelector('#web-worker-progress')
-    
-    document.getElementById('preview').src = URL.createObjectURL(file)
-
-
+    document.getElementById('preview').src = URL.createObjectURL(file);
     logDom.innerHTML = 'Source image size:' + (file.size / 1024 / 1024).toFixed(2) + 'mb'
+
+    /* use this eventually to handle rotation
 
     imageCompression.getExifOrientation(file).then(function (o) {
       console.log('ExifOrientation', o)
     })
+    */
 
     var options = {
       maxSizeMB: parseFloat(0.400),
@@ -107,16 +106,18 @@
     }
     imageCompression(file, options)
       .then(function (output) {
+          // hide the chooser, show the spinner until compression is complete
           chooser.classList.toggle("hide");
           resulting.classList.toggle("hide");
 
           logDom.innerHTML += '<br> output size:' + (output.size / 1024 / 1024).toFixed(2) + 'mb<br>'
-          console.log('output', output)
 
           downloadLink = URL.createObjectURL(output)
+
           logDom.innerHTML += '&nbsp;<a id="result" href="' + downloadLink + '" download="' + file.name + '"><br><br>download compressed image</a><br>or click image to share'
           document.getElementById('preview-after-compress').src = downloadLink;
 
+          // webShare needs a dataUrl instead of a Blob, this hack converts it.
           var shareFile = new File([output], "picture.jpg", {type: 'image/jpeg'});
           window.filesArray = [shareFile];
           return uploadToServer(output)
@@ -128,12 +129,12 @@
 
     function onProgress (p) {
       if (p == 100){
+        // progress gets to 100, hide the spinner
         spinner.classList.toggle("hide");
       }
     }
   }
   function share(){
-    console.log(filesArray)
     navigator.share({
       files: window.filesArray,
       title: 'Shrunk image',
