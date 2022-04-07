@@ -16,7 +16,7 @@
 <img id="preview" />
 <div id="resulting" class="hide">
   <p id="web-worker-log"></p>
-  <img id="preview-after-compress" /><br>
+  <img id="preview-after-compress" onclick="share()"/><br>
   <button id="share" onclick="share()" data-url>share</button>
 </div>
 
@@ -27,7 +27,7 @@
     }
     img {
         margin: 10vw;
-        width: 75%;
+        height: 65vw;
     }
 
     #preview {
@@ -112,7 +112,7 @@
           console.log('output', output)
 
           downloadLink = URL.createObjectURL(output)
-          logDom.innerHTML += '&nbsp;<a id="result" href="' + downloadLink + '" download="' + file.name + '"><br><br>download compressed image</a>'
+          logDom.innerHTML += '&nbsp;<a id="result" href="' + downloadLink + '" download="' + file.name + '"><br><br>download compressed image</a><br>or click image to share'
           document.getElementById('preview-after-compress').src = downloadLink;
 
           var shareFile = new File([output], "picture.jpg", {type: 'image/jpeg'});
